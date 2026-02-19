@@ -424,7 +424,8 @@ function onSingleClickWMS(evt) {
         if (wms_layers[i][1] && wms_layers[i][0].getVisible()) {
             var url = wms_layers[i][0].getSource().getFeatureInfoUrl(
                 evt.coordinate, viewResolution, viewProjection, {
-                    'INFO_FORMAT': 'text/html',
+                    'INFO_FORMAT': 'application/json',
+                    'FEATURE_COUNT': 500
                 });
             if (url) {
                 const wmsTitle = wms_layers[i][0].get('popuplayertitle');
@@ -466,9 +467,18 @@ function onSingleClickWMS(evt) {
 
                 Promise.race([tryFetch(urlsToTry), timeoutPromise])
                     .then((html) => {
-                        if (html.indexOf('<table') !== -1) {
-                            popupContent += '<a><b>' + wmsTitle + '</b></a>';
-                            popupContent += html + '<p></p>';
+                        if (html.indexOf('FeatureCollection') !== -1) {
+                            html = JSON.parse(html)
+                            for (feature of html.features) {
+                                let feature_table = `<ul><li><a><strong>${wmsTitle}</strong></a>`
+                                feature_table += `<table><tbody>`
+                                for (p in feature.properties) {
+                                    feature_table += `<tr><th>${p}</th><td>${feature.properties[p]}</td></tr>`;
+                                }
+                                feature_table += "</tbody></table></li></ul>";
+                                popupContent += feature_table;
+                            }
+                            html = null;
                             updatePopup();
                         }
                     })
