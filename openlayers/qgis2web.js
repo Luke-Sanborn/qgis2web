@@ -670,3 +670,21 @@ if (attributionControl) {
 
 // Keep the layerswitcher labled in sync with layer-scale-visability without rerendering.
 map.on('moveend', updateLayerSwitcherLabelState);
+
+// Get all the map layers to see if they're in a mutually exclusive group.
+map.getLayers().forEach(layer => {
+    if (layer instanceof ol.layer.Group && layer.get('mutually_exclusive')) {
+        // If the layer is in a mutually exclusive group attach listeners to each layer in the group
+        layer.getLayers().forEach(childLayer => {
+        childLayer.on('change:visible', () => {
+            if (childLayer.getVisible()) {
+            layer.getLayers().forEach(otherLayer => {
+                if (otherLayer !== childLayer) {
+                otherLayer.setVisible(false);
+                }
+            });
+            }
+        });
+        });
+    }
+});

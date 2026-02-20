@@ -58,7 +58,7 @@ def writeLayersAndGroups(layers, groups, collapsedGroup, visible, interactive, f
                                            restrictToExtent, extent, count,
                                            vtLayers)
             layerVars += "\n" + "\n".join([layerVar])
-    (groupVars, groupedLayers) = buildGroups(groups, collapsedGroup, qms, layer_names_id)
+    (groupVars, groupedLayers) = buildGroups(groups, collapsedGroup, qms, layer_names_id, iface)
     (mapLayers, layerObjs, osmb) = layersAnd25d(layers, canvas,
                                                 restrictToExtent, extent, qms)
     visibility = getVisibility(mapLayers, layerObjs, visible)
@@ -240,11 +240,15 @@ def getVisibility(mapLayers, layers, visible):
     return visibility
 
 
-def buildGroups(groups, collapsedGroup, qms, layer_names_id):
+def buildGroups(groups, collapsedGroup, qms, layer_names_id, iface):
     groupVars = ""
     groupedLayers = {}
     collapsedIndex = 0
-    for group, groupLayers in groups.items():
+    
+    # Get the layer tree root from iface to find group objects
+    root = iface.layerTreeView().layerTreeModel().rootGroup()
+    
+    for groupName, groupLayers in groups.items():
         groupLayerObjs = ""
         for layer in groupLayers:
             vts = layer.customProperty("VectorTilesReader/vector_tile_url")
@@ -259,13 +263,20 @@ def buildGroups(groups, collapsedGroup, qms, layer_names_id):
         groupCollapsed = "close" if collapsedGroup[collapsedIndex] else "open"
         collapsedIndex += 1
         
+        # Find the QGIS group object by name to check if it's mutually exclusive
+        mutually_exclusive = 'false'  # to false
+        group_node = root.findGroup(groupName)
+        if group_node is not None:
+            mutually_exclusive = 'true' if group_node.isMutuallyExclusive() else 'false'
+        
         groupVars += ('''var %s = new ol.layer.Group({
                                 layers: [%s],
                                 fold: '%s',
-                                title: '%s'});\n''' %
-                      ("group_" + safeName(group), groupLayerObjs, groupCollapsed, group.replace("'", "\\'")))
+                                title: '%s',
+                                mutually_exclusive: %s});\n''' %
+                      ("group_" + safeName(groupName), groupLayerObjs, groupCollapsed, groupName.replace("'", "\\'"), mutually_exclusive))
         for layer in groupLayers:
-            groupedLayers[layer.id()] = safeName(group)
+            groupedLayers[layer.id()] = safeName(groupName)
     return (groupVars, groupedLayers)
 
 
