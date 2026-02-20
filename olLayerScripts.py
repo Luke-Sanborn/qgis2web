@@ -154,9 +154,9 @@ def layerToJavascript(iface, layer, encode2json, matchCRS, interactive,
                 return getWMTS(layer, d, layerAttr, layerName, opacity,
                                minResolution, maxResolution), vtLayers
             else:
-                wms_style = d.get("styles", [""])[0]
+                style = d.get("styles", [""])[0]
                 return getWMS(source, layer, layerAttr, layerName, opacity,
-                              minResolution, maxResolution, wms_style, info, baseMap), vtLayers
+                              minResolution, maxResolution, style, info, baseMap), vtLayers
         elif layer.providerType().lower() == "gdal":
             return getRaster(iface, layer, layerName, layerAttr, minResolution,
                              maxResolution, matchCRS), vtLayers
@@ -633,7 +633,7 @@ def getWMTS(layer, d, layerAttr, layerName, opacity, minResolution,
 
 
 def getWMS(source, layer, layerAttr, layerName, opacity, minResolution,
-           maxResolution, wms_style, info, baseMap):
+           maxResolution, style, info, baseMap):
     layers = re.search(r"layers=(.*?)(?:&|$)", source).groups(0)[0]
     url = re.search(r"url=(.*?)(?:&|$)", source).groups(0)[0]
     metadata = layer.htmlMetadata()
@@ -652,7 +652,7 @@ def getWMS(source, layer, layerAttr, layerName, opacity, minResolution,
                               params: {
                                 "LAYERS": "%(layers)s",
                                 "TILED": "true",
-                                "STYLES": "%(wms_style)s",
+                                "STYLES": "%(style)s",
                                 "VERSION": "%(version)s"},
                             })),
                             title: '%(name)s',
@@ -664,8 +664,8 @@ def getWMS(source, layer, layerAttr, layerName, opacity, minResolution,
                           });
               wms_layers.push([lyr_%(n)s, %(info)d]);''' % {
         "layers": layers, "url": url, "layerAttr": layerAttr, "n": layerName,
-        "name": layer.name().replace("'", "\\'"),"wms_style": wms_style, "version": version, "type": "base" if baseMap else "", 
-        "opacity": opacity, "minRes": minResolution, "maxRes": maxResolution, "info": info}
+        "name": layer.name().replace("'", "\\'"), "style": style, "version": version, "type": "base" if baseMap else "", 
+        "opacity": opacity, "minRes": minResolution, "maxRes": maxResolution, "info": info }
 
 
 def getRaster(iface, layer, layerName, layerAttr, minResolution, maxResolution,
