@@ -529,6 +529,63 @@ var bottomRightContainerDiv = document.getElementById('bottom-right-container')
 //layerswitcher
 @LAYERSLIST@
 
+
+function updateLayerSwitcherLabelState(){
+    if(!layerSwitcher || ! layerSwitcher.element || !layerSwitcher.panel){
+        return;
+    }
+    if(!layerSwitcher.element.classList.contains('shown')){
+        // Don't try to update the label state if the panel is not open
+        return;
+    }
+    var view = map.getView();
+    var resolution = view.getResolution();
+    var zoom = view.getZoom();
+    var layersByTitle = {};
+    var layersByTextTitle = {};
+
+    function collectLayers(group){
+        if(!group || !group.getLayers()){
+            return;
+        }
+        group.getLayers().forEach(function(layer){
+            var title = layer.get('title');
+            if(title){
+                layersByTitle[title] = layer;
+                var textTitle = String(title).replace(/<[^>]*>/g, '').trim();
+                if(textTitle){
+                    layersByTextTitle[textTitle] = layer;
+                }
+            }
+            if(layer instanceof ol.layer.Group){
+                collectLayers(layer);
+            }
+        });
+    }
+
+    collectLayers(map);
+
+    var labels = layerSwitcher.panel.querySelectorAll('li.layer > label');
+    labels.forEach(function(label){
+        var htmlTitle = label.innerHTML;
+        var textTitle = label.textContent.trim();
+        var layer = layersByTitle[htmlTitle] || layersByTextTitle[textTitle];
+        if(!layer){
+            return;
+        }
+        var isDisabled = false;
+        if(resolution >= layer.getMaxResolution() || resolution < layer.getMinResolution()){
+            isDisabled = true;
+        }
+        else if(layer.getMinZoom() && layer.getMaxZoom()){
+            if(zoom <= layer.getMinZoom || zoom > layer.getMaxZoom()){
+                isDisabled = true;
+            }
+        }
+        label.classList.toggle('disabled', isDisabled);
+    });
+}
+
 @MAPUNITLAYERS@
 @M2PX@
 @GRID@
@@ -576,37 +633,40 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 //move controls inside containers, in order
-    //zoom
-    var zoomControl = document.getElementsByClassName('ol-zoom')[0];
-    if (zoomControl) {
-        topLeftContainerDiv.appendChild(zoomControl);
-    }
-    //geolocate
-    if (typeof geolocateControl !== 'undefined') {
-        topLeftContainerDiv.appendChild(geolocateControl);
-    }
-    //measure
-    if (typeof measureControl !== 'undefined') {
-        topLeftContainerDiv.appendChild(measureControl);
-    }
-    //geocoder
-    var searchbar = document.getElementsByClassName('photon-geocoder-autocomplete ol-unselectable ol-control')[0];
-    if (searchbar) {
-        topLeftContainerDiv.appendChild(searchbar);
-    }
-    //search layer
-    var searchLayerControl = document.getElementsByClassName('search-layer')[0];
-    if (searchLayerControl) {
-        topLeftContainerDiv.appendChild(searchLayerControl);
-    }
-    //scale line
-    var scaleLineControl = document.getElementsByClassName('ol-scale-line')[0];
-    if (scaleLineControl) {
-        scaleLineControl.className += ' ol-control';
-        bottomLeftContainerDiv.appendChild(scaleLineControl);
-    }
-    //attribution
-    var attributionControl = document.getElementsByClassName('bottom-attribution')[0];
-    if (attributionControl) {
-        bottomRightContainerDiv.appendChild(attributionControl);
-    }
+//zoom
+var zoomControl = document.getElementsByClassName('ol-zoom')[0];
+if (zoomControl) {
+    topLeftContainerDiv.appendChild(zoomControl);
+}
+//geolocate
+if (typeof geolocateControl !== 'undefined') {
+    topLeftContainerDiv.appendChild(geolocateControl);
+}
+//measure
+if (typeof measureControl !== 'undefined') {
+    topLeftContainerDiv.appendChild(measureControl);
+}
+//geocoder
+var searchbar = document.getElementsByClassName('photon-geocoder-autocomplete ol-unselectable ol-control')[0];
+if (searchbar) {
+    topLeftContainerDiv.appendChild(searchbar);
+}
+//search layer
+var searchLayerControl = document.getElementsByClassName('search-layer')[0];
+if (searchLayerControl) {
+    topLeftContainerDiv.appendChild(searchLayerControl);
+}
+//scale line
+var scaleLineControl = document.getElementsByClassName('ol-scale-line')[0];
+if (scaleLineControl) {
+    scaleLineControl.className += ' ol-control';
+    bottomLeftContainerDiv.appendChild(scaleLineControl);
+}
+//attribution
+var attributionControl = document.getElementsByClassName('bottom-attribution')[0];
+if (attributionControl) {
+    bottomRightContainerDiv.appendChild(attributionControl);
+}
+
+// Keep the layerswitcher labled in sync with layer-scale-visability without rerendering.
+map.on('moveend', updateLayerSwitcherLabelState);
