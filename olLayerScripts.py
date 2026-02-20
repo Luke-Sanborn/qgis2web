@@ -396,9 +396,11 @@ jsonSource_%(n)s.addFeatures(features_%(n)s);''' % {"n": layerName}
         layerCode += writeHeatmap(hmRadius, hmRamp, hmWeight, hmWeightMax)
     if isinstance(renderer, QgsSingleSymbolRenderer):
         layerCode += '''
-                title: '<img src="styles/legend/%(icon)s.png" /> %(name)s'
+                title: '<img src="styles/legend/%(icon)s.png" /> %(name)s',
+                opacity: %(opacity)s
             });''' % {"icon": layerName,
-                      "name": layer.name().replace("'", "\\'")}              
+                      "name": layer.name().replace("'", "\\'"),
+                      "opacity": layer.renderer().symbol().opacity()}              
     elif isinstance(renderer, QgsCategorizedSymbolRenderer):
         layerCode += getLegend(renderer.categories(), layer, layerName)
         layerCode += '''});'''
