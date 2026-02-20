@@ -154,9 +154,8 @@ def layerToJavascript(iface, layer, encode2json, matchCRS, interactive,
                 return getWMTS(layer, d, layerAttr, layerName, opacity,
                                minResolution, maxResolution), vtLayers
             else:
-                style = d.get("styles", [""])[0]
                 return getWMS(source, layer, layerAttr, layerName, opacity,
-                              minResolution, maxResolution, style, info, baseMap), vtLayers
+                              minResolution, maxResolution, info, baseMap), vtLayers
         elif layer.providerType().lower() == "gdal":
             return getRaster(iface, layer, layerName, layerAttr, minResolution,
                              maxResolution, matchCRS), vtLayers
@@ -633,9 +632,11 @@ def getWMTS(layer, d, layerAttr, layerName, opacity, minResolution,
 
 
 def getWMS(source, layer, layerAttr, layerName, opacity, minResolution,
-           maxResolution, style, info, baseMap):
-    layers = re.search(r"layers=(.*?)(?:&|$)", source).groups(0)[0]
-    url = re.search(r"url=(.*?)(?:&|$)", source).groups(0)[0]
+           maxResolution, info, baseMap):
+    qs = parse_qs(source)
+    if "layers" in qs and "url" in qs:
+        layers = qs["layers"][0]
+        url = qs["url"][0]
     metadata = layer.htmlMetadata()
     needle = "<tr><td>%s</td><td>(.+?)</td>" % (
         QCoreApplication.translate("QgsWmsProvider",
@@ -645,6 +646,20 @@ def getWMS(source, layer, layerAttr, layerName, opacity, minResolution,
         version = result.group(1)
     else:
         version = ""
+    style = ""
+    if "styles" in qs:
+        style = qs["styles"][0]
+    popupLayerTitle = layer.name().replace("'", "\\'")
+    layerTitle = popupLayerTitle
+    if layer.dataProvider().supportsLegendGraphic() == True and baseMap == False:
+        legendUrl = None
+        qs = parse_qs(source)
+        if "url" in qs and "layers" in qs:
+            legendUrl = f"{qs['url'][0]}?service=WMS&request=GetLegendGraphic&format=image/png&layer={qs['layers'][0]}"
+            if style:
+                legendUrl += f"&style={style}"
+        layerTitle += f'<br /><img src="{legendUrl}" style="max-width:unset; max-height:unset;" />'
+
     return '''var lyr_%(n)s = new ol.layer.Tile({
                             source: new ol.source.TileWMS(({
                               url: "%(url)s",
@@ -656,7 +671,7 @@ def getWMS(source, layer, layerAttr, layerName, opacity, minResolution,
                                 "VERSION": "%(version)s"},
                             })),
                             title: '%(name)s',
-                            popuplayertitle: '%(name)s',
+                            popuplayertitle: '%(popupLayerTitle)s',
                             type: '%(type)s',
                             opacity: %(opacity)f,
                             %(minRes)s
@@ -664,7 +679,7 @@ def getWMS(source, layer, layerAttr, layerName, opacity, minResolution,
                           });
               wms_layers.push([lyr_%(n)s, %(info)d]);''' % {
         "layers": layers, "url": url, "layerAttr": layerAttr, "n": layerName,
-        "name": layer.name().replace("'", "\\'"), "style": style, "version": version, "type": "base" if baseMap else "", 
+        "name": layerTitle, "popupLayerTitle":popupLayerTitle, "style": style, "version": version, "type": "base" if baseMap else "", 
         "opacity": opacity, "minRes": minResolution, "maxRes": maxResolution, "info": info }
 
 
