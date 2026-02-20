@@ -387,9 +387,11 @@ jsonSource_%(n)s.addFeatures(features_%(n)s);''' % {"n": layerName}
         layerCode += '''
                 style: style_%(n)s,
                 popuplayertitle: '%(name)s',
+                opacity: %(opacity)s,
                 interactive: %(int)s,''' % {"n": layerName,
                                             "int": str(interactive).lower(),
-                                            "name": layer.name().replace("'", "\\'")}
+                                            "name": layer.name().replace("'", "\\'"),
+                                            "opacity": layer.opacity()}
     else:
         layerCode += writeHeatmap(hmRadius, hmRamp, hmWeight, hmWeightMax)
     if isinstance(renderer, QgsSingleSymbolRenderer):
