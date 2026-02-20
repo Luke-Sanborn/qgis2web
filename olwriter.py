@@ -351,7 +351,8 @@ var layerSwitcher = new ol.control.LayerSwitcher({
 	tipLabel: "Layers",
     target: 'top-right-container',
 	collapseLabel: '»',
-	collapseTipLabel: 'Close'
+	collapseTipLabel: 'Close',
+    groupSelectStyle: 'group'
     });
 map.addControl(layerSwitcher);
 if (hasTouchScreen || isSmallScreen) {
