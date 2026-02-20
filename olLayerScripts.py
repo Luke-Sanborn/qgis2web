@@ -154,8 +154,9 @@ def layerToJavascript(iface, layer, encode2json, matchCRS, interactive,
                 return getWMTS(layer, d, layerAttr, layerName, opacity,
                                minResolution, maxResolution), vtLayers
             else:
+                wms_style = d.get("styles")
                 return getWMS(source, layer, layerAttr, layerName, opacity,
-                              minResolution, maxResolution, info, baseMap), vtLayers
+                              minResolution, maxResolution, wms_style, info, baseMap), vtLayers
         elif layer.providerType().lower() == "gdal":
             return getRaster(iface, layer, layerName, layerAttr, minResolution,
                              maxResolution, matchCRS), vtLayers
@@ -632,7 +633,7 @@ def getWMTS(layer, d, layerAttr, layerName, opacity, minResolution,
 
 
 def getWMS(source, layer, layerAttr, layerName, opacity, minResolution,
-           maxResolution, info, baseMap):
+           maxResolution, wms_style, info, baseMap):
     layers = re.search(r"layers=(.*?)(?:&|$)", source).groups(0)[0]
     url = re.search(r"url=(.*?)(?:&|$)", source).groups(0)[0]
     metadata = layer.htmlMetadata()
@@ -651,6 +652,7 @@ def getWMS(source, layer, layerAttr, layerName, opacity, minResolution,
                               params: {
                                 "LAYERS": "%(layers)s",
                                 "TILED": "true",
+                                "STYLES": "%(wms_style)s",
                                 "VERSION": "%(version)s"},
                             })),
                             title: '%(name)s',
