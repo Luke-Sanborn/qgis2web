@@ -672,8 +672,8 @@ def getWMS(source, layer, layerAttr, layerName, opacity, minResolution,
     style = ""
     if "styles" in qs:
         style = qs["styles"][0]
-    popupLayerTitle = layer.name().replace("'", "\\'")
-    layerTitle = popupLayerTitle
+        
+    layerTitle = getLayerTitle(layer)
     if layer.dataProvider().supportsLegendGraphic() == True and baseMap == False:
         legendUrl = None
         qs = parse_qs(source)
@@ -702,7 +702,7 @@ def getWMS(source, layer, layerAttr, layerName, opacity, minResolution,
                           });
               wms_layers.push([lyr_%(n)s, %(info)d]);''' % {
         "layers": layers, "url": url, "layerAttr": layerAttr, "n": layerName,
-        "name": getLayerTitle(layer), "popupLayerTitle":popupLayerTitle, "style": style, "version": version, "type": "base" if baseMap else "", 
+        "name": layerTitle, "popupLayerTitle":layer.name().replace("'", "\\'"), "style": style, "version": version, "type": "base" if baseMap else "", 
         "opacity": opacity, "minRes": minResolution, "maxRes": maxResolution, "info": info }
 
 
