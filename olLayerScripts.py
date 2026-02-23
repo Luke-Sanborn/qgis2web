@@ -401,7 +401,7 @@ jsonSource_%(n)s.addFeatures(features_%(n)s);''' % {"n": layerName}
                 opacity: %(opacity)s,
                 interactive: %(int)s,''' % {"n": layerName,
                                             "int": str(interactive).lower(),
-                                            "name": getLayerTitle(layer),
+                                            "name":  getLayerTitle(layer),
                                             "opacity": layer.opacity()}
     else:
         layerCode += writeHeatmap(hmRadius, hmRamp, hmWeight, hmWeightMax)
@@ -478,6 +478,7 @@ fetchWFS%(n)sData(lyr_%(n)s.get('title'), function (error, response) {
 });''' % {"n": layerName}
     return layerCode
 
+
 def getLayerTitle(layer):
     """
     If a layer has an abstract, add an info icon with the abstract as a tooltip to the title. Otherwise, just return the layer name as the title.
@@ -486,6 +487,7 @@ def getLayerTitle(layer):
     if layer.metadata().abstract():
         title = f'{layer.name().replace("'", "\\'")} <i class="fas fa-info-circle" title="{layer.metadata().abstract().replace("'", "\\'").replace("\n", "&#013;")}"></i>'
     return title
+
 
 def getLegend(subitems, layer, layerName):
     icons = ""
@@ -672,7 +674,6 @@ def getWMS(source, layer, layerAttr, layerName, opacity, minResolution,
     style = ""
     if "styles" in qs:
         style = qs["styles"][0]
-        
     layerTitle = getLayerTitle(layer)
     if layer.dataProvider().supportsLegendGraphic() == True and baseMap == False:
         legendUrl = None
@@ -702,7 +703,7 @@ def getWMS(source, layer, layerAttr, layerName, opacity, minResolution,
                           });
               wms_layers.push([lyr_%(n)s, %(info)d]);''' % {
         "layers": layers, "url": url, "layerAttr": layerAttr, "n": layerName,
-        "name": layerTitle, "popupLayerTitle":layer.name().replace("'", "\\'"), "style": style, "version": version, "type": "base" if baseMap else "", 
+        "name": layerTitle, "popupLayerTitle": getLayerTitle(layer), "style": style, "version": version, "type": "base" if baseMap else "", 
         "opacity": opacity, "minRes": minResolution, "maxRes": maxResolution, "info": info }
 
 
