@@ -401,7 +401,7 @@ jsonSource_%(n)s.addFeatures(features_%(n)s);''' % {"n": layerName}
                 opacity: %(opacity)s,
                 interactive: %(int)s,''' % {"n": layerName,
                                             "int": str(interactive).lower(),
-                                            "name": layer.name().replace("'", "\\'"),
+                                            "name": getLayerTitle(layer),
                                             "opacity": layer.opacity()}
     else:
         layerCode += writeHeatmap(hmRadius, hmRamp, hmWeight, hmWeightMax)
@@ -410,7 +410,7 @@ jsonSource_%(n)s.addFeatures(features_%(n)s);''' % {"n": layerName}
                 title: '<img src="styles/legend/%(icon)s.png" /> %(name)s',
                 opacity: %(opacity)s
             });''' % {"icon": layerName,
-                      "name": layer.name().replace("'", "\\'"),
+                      "name": getLayerTitle(layer),
                       "opacity": layer.renderer().symbol().opacity()}              
     elif isinstance(renderer, QgsCategorizedSymbolRenderer):
         layerCode += getLegend(renderer.categories(), layer, layerName)
@@ -429,7 +429,7 @@ jsonSource_%(n)s.addFeatures(features_%(n)s);''' % {"n": layerName}
     else:
         layerCode += '''
                 title: '%(name)s'
-            });''' % {"name": layer.name().replace("'", "\\'")}
+            });''' % {"name": getLayerTitle(layer)}
         
     if wfs and not encode2json:
         layerCode += '''\n
@@ -478,6 +478,14 @@ fetchWFS%(n)sData(lyr_%(n)s.get('title'), function (error, response) {
 });''' % {"n": layerName}
     return layerCode
 
+def getLayerTitle(layer):
+    """
+    If a layer has an abstract, add an info icon with the abstract as a tooltip to the title. Otherwise, just return the layer name as the title.
+    """
+    title = "%s" % layer.name().replace("'", "\\'")
+    if layer.metadata().abstract():
+        title = f'{layer.name().replace("'", "\\'")} <i class="fas fa-info-circle" title="{layer.metadata().abstract().replace("'", "\\'").replace("\n", "&#013;")}"></i>'
+    return title
 
 def getLegend(subitems, layer, layerName):
     icons = ""
@@ -488,7 +496,7 @@ def getLegend(subitems, layer, layerName):
                   {"icon": layerName, "count": count, "text": text})
     legend = '''
     title: '%(name)s<br />%(icons)s' ''' % {"icons": icons, 
-                                            "name": layer.name().replace("'", "\\'")}
+                                            "name": getLayerTitle(layer)}
     return legend
 
 
@@ -640,7 +648,7 @@ def getWMTS(layer, d, layerAttr, layerName, opacity, minResolution,
                             %(maxRes)s
                           });''' % {"layerId": layerId, "url": url,
                                     "layerAttr": layerAttr, "format": format,
-                                    "n": layerName, "name": layer.name().replace("'", "\\'"),
+                                    "n": layerName, "name": getLayerTitle(layer),
                                     "opacity": opacity, "style": style,
                                     "minRes": minResolution,
                                     "maxRes": maxResolution}
@@ -694,7 +702,7 @@ def getWMS(source, layer, layerAttr, layerName, opacity, minResolution,
                           });
               wms_layers.push([lyr_%(n)s, %(info)d]);''' % {
         "layers": layers, "url": url, "layerAttr": layerAttr, "n": layerName,
-        "name": layerTitle, "popupLayerTitle":popupLayerTitle, "style": style, "version": version, "type": "base" if baseMap else "", 
+        "name": getLayerTitle(layer), "popupLayerTitle":popupLayerTitle, "style": style, "version": version, "type": "base" if baseMap else "", 
         "opacity": opacity, "minRes": minResolution, "maxRes": maxResolution, "info": info }
 
 
