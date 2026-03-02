@@ -75,7 +75,7 @@ html, body {
     line-height: 1.2;
     margin-top: 5px;
 	max-height: 50vh;
-	max-width: 70vw;
+	max-width: 40vw;
     width: max-content;
 	overflow: auto;
 }
