@@ -58,10 +58,10 @@ def writeLayerSearch(cssAddress, jsAddress, controlCount, layerSearch,
 var searchLayer = new SearchLayer({{
     layer: lyr_{layer},
     colName: '{field}',
-    zoom: 10,
+    zoom: 17,
     collapsed: true,
     map: map,
-    maxResults: 10,
+    maxResults: 15,
 }});
 map.addControl(searchLayer);
 document.getElementsByClassName('search-layer')[0].getElementsByTagName('button')[0].className += ' fa fa-binoculars';
