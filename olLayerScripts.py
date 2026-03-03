@@ -485,7 +485,10 @@ def getLayerTitle(layer):
     """
     title = "%s" % layer.name().replace("'", "\\'")
     if layer.metadata().abstract():
-        title = f'{layer.name().replace("'", "\\'")} <i class="fas fa-info-circle" title="{layer.metadata().abstract().replace("'", "\\'").replace("\n", "&#013;")}"></i>'
+        title = "%(title)s <i class=\"fas fa-info-circle\" title=\"%(abstract)s\"></i>" % {
+            "title": layer.name().replace("'", "\\'"), 
+            "abstract": layer.metadata().abstract().replace("'", "\\'").replace("\n", "&#013;")
+        }
     return title
 
 
